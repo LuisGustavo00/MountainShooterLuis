@@ -8,8 +8,8 @@ from pygame import Surface, Rect
 from pygame.font import Font
 
 from code.Const import C_WHITE, WIN_HEIGHT, MENU_OPTION, EVENT_ENEMY, SPAWN_TIME, C_GREEN, C_CYAN, EVENT_TIMEOUT, \
-    TIMEOUT_STEP, TIMEOUT_LEVEL
-from code.Enemy import Enemy
+    TIMEOUT_STEP, TIMEOUT_LEVEL, WIN_WIDTH
+from code.Enemy import Enemy, Enemy3
 from code.Entity import Entity
 from code.EntityFactory import EntityFactory
 from code.EntityMediator import EntityMediator
@@ -19,6 +19,12 @@ from code.Player import Player
 class Level:
     def __init__(self, window: Surface, name: str, game_mode: str, player_score: list[int]):
         self.timeout = TIMEOUT_LEVEL
+        if name == "Level3":
+            self.timeout = TIMEOUT_LEVEL * 2
+
+
+        else:
+            self.timeout = TIMEOUT_LEVEL
         self.window = window
         self.name = name
         self.game_mode = game_mode
@@ -32,7 +38,9 @@ class Level:
             player.score = player_score[1]
             self.entity_list.append(player)
         pygame.time.set_timer(EVENT_ENEMY, SPAWN_TIME)
-        pygame.time.set_timer(EVENT_TIMEOUT, TIMEOUT_STEP)  # 100ms
+        pygame.time.set_timer(EVENT_TIMEOUT, TIMEOUT_STEP) # 100ms
+
+
 
     def run(self, player_score: list[int]):
         pygame.mixer_music.load(f'./asset/{self.name}.mp3')
@@ -44,7 +52,7 @@ class Level:
             for ent in self.entity_list:
                 self.window.blit(source=ent.surf, dest=ent.rect)
                 ent.move()
-                if isinstance(ent, (Player, Enemy)):
+                if isinstance(ent, (Player, Enemy)) :
                     shoot = ent.shoot()
                     if shoot is not None:
                         self.entity_list.append(shoot)
@@ -57,8 +65,24 @@ class Level:
                     pygame.quit()
                     sys.exit()
                 if event.type == EVENT_ENEMY:
-                    choice = random.choice(('Enemy1', 'Enemy2'))
-                    self.entity_list.append(EntityFactory.get_entity(choice))
+                    if self.name == "Level3":
+                        start_side = random.choice(["top", "bottom"])
+
+
+                        if start_side == "top":
+                            position = (WIN_WIDTH, random.randint(50, WIN_HEIGHT - 50))
+                            direction = 1
+                        else:
+                            position = (WIN_WIDTH, random.randint(50, WIN_HEIGHT - 50))
+                            direction = -1
+
+                        enemy3 = Enemy3(name="Enemy3", position=position)
+                        enemy3.direction = direction
+                        self.entity_list.append(enemy3)
+                    else:
+                        choice = random.choice(("Enemy1", "Enemy2"))
+                        self.entity_list.append(EntityFactory.get_entity(choice))
+
                 if event.type == EVENT_TIMEOUT:
                     self.timeout -= TIMEOUT_STEP
                     if self.timeout == 0:
